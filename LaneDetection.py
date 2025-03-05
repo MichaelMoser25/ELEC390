@@ -207,6 +207,6 @@ def frameProcess(image, show=False):
     return image_canny
 
 
-testingRoad1 = cv2.imread('C:\\Users\\brifr\\OneDrive\\CMPE\\Y3 Winter\\390\\RoadDetection\\TestingVideos\\TestingRoad1.jpg')
-
-frameProcess(testingRoad1, True)
+# testingRoad1 = cv2.imread('C:\\Users\\brifr\\OneDrive\\CMPE\\Y3 Winter\\390\\RoadDetection\\TestingVideos\\TestingRoad1.jpg')
+#
+# frameProcess(testingRoad1, True)
