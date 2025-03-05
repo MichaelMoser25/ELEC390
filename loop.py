@@ -184,11 +184,13 @@ class PicarDuckHunter:
         elif sign_type == 'one_way':
             print("One-way sign detected! Adjusting route...")
             self.turn_right()  # Assume we should turn right for one-way
-    
+            
+     # ------------------------------------------ if want to implement
     def grab_duck(self):
         """Use gripper to pick up a duck"""
         print("Grabbing duck...")
-        # Open gripper
+        
+        # Open gripper ------------------------------------------ if want to implement
         self.px.set_pwm_servo_angle(1, self.gripper_open)
         time.sleep(1)
         
@@ -197,7 +199,7 @@ class PicarDuckHunter:
         time.sleep(0.5)
         self.px.stop()
         
-        # Close gripper
+        # Close gripper  ------------------------------------------ if want to implement
         self.px.set_pwm_servo_angle(1, self.gripper_closed)
         time.sleep(1)
         
@@ -286,6 +288,7 @@ class PicarDuckHunter:
         if duck_boxes:
             largest_box = max(duck_boxes, key=lambda box: (box[2]-box[0])*(box[3]-box[1]))
             self.is_tracking_duck = True
+            # IF WE WANT TO DO IT
             if self.track_duck(largest_box):
                 # Duck was grabbed, continue with line following
                 self.is_tracking_duck = False
@@ -300,7 +303,7 @@ class PicarDuckHunter:
             self.handle_sign(sign)
             return
             
-        # If not tracking a duck, follow the line
+        # If not tracking a duck follow the line
         if not self.is_tracking_duck:
             error = self.detect_line(frame)
             
@@ -356,7 +359,7 @@ class PicarDuckHunter:
             # Initialize gripper
             self.px.set_pwm_servo_angle(1, self.gripper_open)
             if hasattr(self.px, 'set_pwm_servo_angle'):
-                self.px.set_pwm_servo_angle(2, 0)  # Reset lift servo if available
+                self.px.set_pwm_servo_angle(2, 0)  # Reset lift servo if we wanna get it going
             
             # Initialize direction
             self.px.set_dir_servo_angle(0)
@@ -376,8 +379,8 @@ class PicarDuckHunter:
 
 def main():
     try:
-        # Change the server URL to match your setup
-        robot = PicarDuckHunter(server_url="http://your-server-url:port")
+        # Change the server URL
+        robot = PicarDuckHunter(server_url="http://server-url:port")
         robot.run()
     except Exception as e:
         print(f"Fatal error: {e}")
