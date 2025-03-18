@@ -91,7 +91,7 @@ def filter_outliers(df, col):
     return df[(df[col] >= lower_bound) & (df[col] <= upper_bound)]
 
 def assignLane(lines, imageHeight, prev_left_lane=None, prev_right_lane=None):
-    if not lines or len(lines) == 0:
+    if lines is None or len(lines) == 0:
         return prev_left_lane, prev_right_lane
         
     dtype_dict = {
@@ -294,6 +294,9 @@ def test_lane_detection():
     prev_right_lane = None
     
     try:
+        print("Starting lane detection test mode...")
+        print("Press 'q' to quit")
+        
         while True:
             ret, frame = cap.read()
             if not ret:
@@ -314,29 +317,39 @@ def test_lane_detection():
             
             # Draw lanes on display frame if detected
             if left_lane is not None and right_lane is not None:
-                left_x1, left_x2, y1, y2, _, _ = left_lane
-                right_x1, right_x2, _, _, _, _ = right_lane
-                
-                # Draw left lane line
-                cv2.line(display_frame, (left_x1, y1), (left_x2, y2), (255, 0, 0), 5)
-                # Draw right lane line
-                cv2.line(display_frame, (right_x1, y1), (right_x2, y2), (255, 0, 0), 5)
-                # Draw center line
-                center_x1 = (left_x1 + right_x1) // 2
-                center_x2 = (left_x2 + right_x2) // 2
-                cv2.line(display_frame, (center_x1, y1), (center_x2, y2), (0, 255, 0), 3)
-                
-                # Calculate steering
-                steering = calculate_steering(left_lane, right_lane, frame.shape[1])
-                print(f"Calculated steering angle: {steering:.2f}")
-                
-                # Display steering info on frame
-                cv2.putText(display_frame, f"Steering: {steering:.2f}", (10, 30), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                try:
+                    left_x1, left_x2, y1, y2, _, _ = left_lane
+                    right_x1, right_x2, _, _, _, _ = right_lane
+                    
+                    # Draw left lane line
+                    cv2.line(display_frame, (left_x1, y1), (left_x2, y2), (255, 0, 0), 5)
+                    # Draw right lane line
+                    cv2.line(display_frame, (right_x1, y1), (right_x2, y2), (255, 0, 0), 5)
+                    # Draw center line
+                    center_x1 = (left_x1 + right_x1) // 2
+                    center_x2 = (left_x2 + right_x2) // 2
+                    cv2.line(display_frame, (center_x1, y1), (center_x2, y2), (0, 255, 0), 3)
+                    
+                    # Calculate and display steering
+                    steering = calculate_steering(left_lane, right_lane, frame.shape[1])
+                    cv2.putText(display_frame, f"Steering: {steering:.2f}", (10, 30), 
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+                    print(f"Detected lanes - Steering angle: {steering:.2f}")
+                except Exception as e:
+                    print(f"Error drawing lanes: {e}")
             else:
-                print("No lanes detected")
                 cv2.putText(display_frame, "No lanes detected", (10, 30), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+                print("No lanes detected")
+            
+            # Add region of interest overlay
+            rows, cols = frame.shape[:2]
+            bottom_left = [cols * bottomLeftCol, rows * bottomRow]
+            top_left = [cols * topLeftCol, rows * topRow]
+            bottom_right = [cols * bottomRightCol, rows * bottomRow]
+            top_right = [cols * topRightCol, rows * topRow]
+            roi_points = np.array([[bottom_left, top_left, top_right, bottom_right]], dtype=np.int32)
+            cv2.polylines(display_frame, roi_points, isClosed=True, color=(0, 255, 255), thickness=2)
             
             # Display the original frame with overlays
             cv2.imshow("Lane Detection", display_frame)
@@ -355,6 +368,7 @@ def test_lane_detection():
     finally:
         cap.release()
         cv2.destroyAllWindows()
+        print("Test mode ended")
 
 if __name__ == "__main__":
     # Ask user which mode to run
