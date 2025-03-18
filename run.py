@@ -52,15 +52,7 @@ def regionSelect(image, show=False):
     cv2.fillPoly(mask, vertices, mask_color)
     masked_image = cv2.bitwise_and(image, mask)
 
-    if show:
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        overlay_image = image_rgb.copy()
-        cv2.polylines(overlay_image, [vertices], isClosed=True, color=(255, 0, 0), thickness=3)
-        plt.imshow(overlay_image)
-        plt.title("Road Detection Region")
-        plt.axis("off")
-        plt.show()
-
+    # Removed matplotlib visualization code
     return masked_image
 
 def hough_transform(image):
@@ -165,7 +157,7 @@ def frameProcess(image, prev_left_lane=None, prev_right_lane=None, show=False):
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     image_blurred = cv2.GaussianBlur(image_gray, (7, 7), 0)
     image_canny = cv2.Canny(image_blurred, cannyLowThreshold, cannyHighThreshold)
-    image_processed = regionSelect(image_canny, show=show)
+    image_processed = regionSelect(image_canny, show=False)  # Always set to False to avoid matplotlib
     lines = hough_transform(image_processed)
 
     leftLane, rightLane = assignLane(lines, h, prev_left_lane, prev_right_lane)
@@ -173,27 +165,7 @@ def frameProcess(image, prev_left_lane=None, prev_right_lane=None, show=False):
     if leftLane is None or rightLane is None:
         return None, None, image_canny
 
-    if show:
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        line_image = np.copy(image_rgb)
-
-        if lines is not None and len(lines) > 0:
-            for line in lines:
-                x1, y1, x2, y2 = line[0]
-                cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 3)
-
-        hough_line_image = np.copy(image_rgb)
-        left_x1, left_x2, hy1, hy2, left_slope, left_intercept = leftLane
-        right_x1, right_x2, hy1, hy2, right_slope, right_intercept = rightLane
-        
-        cv2.line(hough_line_image, (left_x1, hy1), (left_x2, hy2), (255, 0, 0), 10)
-        cv2.line(hough_line_image, (right_x1, hy1), (right_x2, hy2), (255, 0, 0), 10)
-
-        plt.figure(figsize=(10, 6))
-        plt.imshow(hough_line_image)
-        plt.title("Lane Detection")
-        plt.axis("off")
-        plt.show()
+    # Removed matplotlib visualization code since we're using OpenCV for display
 
     return leftLane, rightLane, image_canny
 
@@ -325,20 +297,61 @@ def test_lane_detection():
         while True:
             ret, frame = cap.read()
             if not ret:
+                print("Failed to capture frame")
                 continue
-                
-            left_lane, right_lane, _ = frameProcess(frame, prev_left_lane, prev_right_lane, show=True)
             
+            # Create a copy of the frame for display
+            display_frame = frame.copy()
+            
+            # Process frame for lane detection (without showing matplotlib plots)
+            left_lane, right_lane, processed = frameProcess(frame, prev_left_lane, prev_right_lane, show=False)
+            
+            # Update previous lanes
+            if left_lane is not None:
+                prev_left_lane = left_lane
+            if right_lane is not None:
+                prev_right_lane = right_lane
+            
+            # Draw lanes on display frame if detected
             if left_lane is not None and right_lane is not None:
+                left_x1, left_x2, y1, y2, _, _ = left_lane
+                right_x1, right_x2, _, _, _, _ = right_lane
+                
+                # Draw left lane line
+                cv2.line(display_frame, (left_x1, y1), (left_x2, y2), (255, 0, 0), 5)
+                # Draw right lane line
+                cv2.line(display_frame, (right_x1, y1), (right_x2, y2), (255, 0, 0), 5)
+                # Draw center line
+                center_x1 = (left_x1 + right_x1) // 2
+                center_x2 = (left_x2 + right_x2) // 2
+                cv2.line(display_frame, (center_x1, y1), (center_x2, y2), (0, 255, 0), 3)
+                
+                # Calculate steering
                 steering = calculate_steering(left_lane, right_lane, frame.shape[1])
-                print(f"Calculated steering angle: {steering}")
+                print(f"Calculated steering angle: {steering:.2f}")
+                
+                # Display steering info on frame
+                cv2.putText(display_frame, f"Steering: {steering:.2f}", (10, 30), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             else:
                 print("No lanes detected")
-                
+                cv2.putText(display_frame, "No lanes detected", (10, 30), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            
+            # Display the original frame with overlays
+            cv2.imshow("Lane Detection", display_frame)
+            
+            # Display the processed frame (canny edges)
+            if processed is not None:
+                cv2.imshow("Processed View", processed)
+            
+            # Press 'q' to quit
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
                 
-            time.sleep(0.5)  # Process every half second
+            time.sleep(0.1)  # Process every 100ms for smoother display
+    except Exception as e:
+        print(f"Error in test mode: {e}")
     finally:
         cap.release()
         cv2.destroyAllWindows()
