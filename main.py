@@ -34,12 +34,14 @@ topRow = 0.4
 # Canny edge variables
 cannyLowThreshold = 240
 cannyHighThreshold = 255
+
 # Hough transform variables
 rho = 1  # 1
 theta = np.pi / 180
 threshold = 20  # 20
 minLineLength = 50  # 20
 maxLineGap = 100  # 500
+
 # Hough line outlier filter variables
 percentile = 0.25
 outlierMultiplier = 1.5
@@ -298,7 +300,6 @@ def process_objects(objects, frame_width, frame_height):
                 priority_object = obj
                 action = "slow"
                 max_area = obj_area
-                # TODO: Add duck hunting mode if implementing gripper
                 
             elif label in ["sign_oneway_right"] and obj_area > SLOW_THRESHOLD:
                 priority_object = obj
