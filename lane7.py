@@ -45,7 +45,7 @@ percentile = 0.2
 outlierMultiplier = 1.8
 
 # Movement parameters - REDUCED SPEED
-speed = 8  # Base speed
+speed = 10 # Base speed
 max_angle = 30  # Max steering angle
 kp = 0.4  # Increased for more responsive steering
 kd = 0.15  # Derivative gain
